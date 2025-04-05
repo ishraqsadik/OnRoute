@@ -4,6 +4,7 @@ import TripForm from '@/components/TripForm';
 import MapView from '@/components/MapView';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
+import ScriptLoader from '@/components/ScriptLoader';
 import { getRecommendations } from '@/lib/api';
 import { isAuthenticated, logout } from '@/lib/auth';
 
@@ -64,6 +65,9 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col">
+      {/* Include ScriptLoader for debugging Google Maps */}
+      <ScriptLoader />
+      
       {/* Navigation header */}
       <header className="p-4 flex justify-between items-center border-b">
         <h1 className="text-xl font-bold cursor-pointer" onClick={resetToHome}>OnRoute</h1>

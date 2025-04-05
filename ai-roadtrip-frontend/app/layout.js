@@ -18,13 +18,16 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  
   return (
     <html lang="en">
       <head>
+        {/* Load Google Maps API with Callback */}
         <Script
           id="google-maps-script"
           strategy="beforeInteractive"
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_API_KEY}&libraries=places`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=Function.prototype`}
         />
       </head>
       <body
