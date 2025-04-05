@@ -1,0 +1,14 @@
+{
+  "name": "onroute",
+  "version": "1.0.0",
+  "description": "AI Road Trip Planner",
+  "scripts": {
+    "frontend": "cd ai-roadtrip-frontend && npm run dev",
+    "backend": "cd ai-roadtrip-backend && npm run dev",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "install:all": "npm install && cd ai-roadtrip-frontend && npm install && cd ../ai-roadtrip-backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
