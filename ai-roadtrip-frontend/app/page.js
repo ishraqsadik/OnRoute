@@ -7,6 +7,7 @@ import SignupForm from '@/components/SignupForm';
 import ScriptLoader from '@/components/ScriptLoader';
 import { getRecommendations } from '@/lib/api';
 import { isAuthenticated, logout } from '@/lib/auth';
+import Image from 'next/image';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('landing');
@@ -69,15 +70,27 @@ export default function Home() {
       <ScriptLoader />
       
       {/* Navigation header */}
-      <header className="p-4 flex justify-between items-center border-b">
-        <h1 className="text-xl font-bold cursor-pointer" onClick={resetToHome}>OnRoute</h1>
+      <header className="pl-0 pr-4 py-2.5 flex justify-between items-center">
+        <div 
+          className="cursor-pointer w-[280px] h-[100px] relative flex items-center -ml-16" 
+          onClick={resetToHome}
+        >
+          <Image
+            src="/images/onroute-logo.png"
+            alt="OnRoute Logo"
+            fill
+            priority
+            className="object-contain"
+            sizes="(max-width: 768px) 200px, 280px"
+          />
+        </div>
         <div>
           {isLoggedIn ? (
             <button onClick={handleLogout} className="text-blue-600 hover:underline">Logout</button>
           ) : (
             <div className="space-x-4">
               <button onClick={handleLogin} className="text-blue-600 hover:underline">Login</button>
-              <button onClick={handleSignup} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button onClick={handleSignup} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 Sign Up
               </button>
             </div>
@@ -87,9 +100,9 @@ export default function Home() {
 
       <div className={`transition-all duration-500 ease-in-out ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
         {currentView === 'landing' && (
-          <div className="flex min-h-screen flex-col items-center justify-center text-center p-6">
-            <h1 className="text-5xl font-bold mb-6">AI Road Trip Planner</h1>
-            <p className="text-xl mb-8 max-w-2xl">Plan your perfect road trip with AI-powered recommendations for restaurants and gas stations along your route.</p>
+          <div className="flex min-h-[50vh] flex-col items-center justify-center text-center p-6 mt-16">
+            <h1 className="text-5xl font-bold mb-6">Smarter Routes. Personalized Stops.</h1>
+            <p className="text-xl mb-8 max-w-2xl">Discover your journey - not just your destination, tailored to your preferences</p>
             <button 
               onClick={() => handleViewChange('form')}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition-colors"

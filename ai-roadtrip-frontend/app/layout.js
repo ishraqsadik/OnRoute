@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
   const apiKey = process.env.GOOGLE_API_KEY;
   
   return (
-    <html lang="en">
+    <html lang="en" className="light">
       <head>
         {/* Load Google Maps API with Callback */}
         <Script
