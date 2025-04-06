@@ -8,6 +8,7 @@ import ScriptLoader from '@/components/ScriptLoader';
 import { getRecommendations } from '@/lib/api';
 import { isAuthenticated, logout } from '@/lib/auth';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('landing');
@@ -101,7 +102,7 @@ export default function Home() {
       <div className={`transition-all duration-500 ease-in-out ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
         {currentView === 'landing' && (
           <div className="flex min-h-[50vh] flex-col items-center justify-center text-center p-6 mt-16 relative">
-            <div className="absolute top-[-120px] right-[50px] w-[510px] h-[510px] pointer-events-none">
+            <div className="absolute top-[-120px] right-[50px] w-[510px] h-[510px] pointer-events-none transition-all duration-2000 ease-out delay-1200 opacity-0 animate-slide-in-right">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/dashedline.png"
@@ -112,7 +113,7 @@ export default function Home() {
                   sizes="(max-width: 768px) 100vw, 510px"
                 />
               </div>
-              <div className="absolute top-[427px] right-[200px]">
+              <div className="absolute top-[427px] right-[200px] transition-all duration-2000 ease-out delay-1500 opacity-0 animate-slide-in-right">
                 <Image
                   src="/images/car.png"
                   alt="Car"
@@ -123,14 +124,24 @@ export default function Home() {
                 />
               </div>
             </div>
-            <h1 className="text-5xl font-bold mb-6 relative z-10">Smarter Routes. Personalized Stops.</h1>
-            <p className="text-xl mb-8 max-w-2xl relative z-10">Discover your journey - not just your destination, tailored to your preferences</p>
-            <button 
-              onClick={() => handleViewChange('form')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition-colors relative z-10"
-            >
-              Plan Your Trip
-            </button>
+            <div className="relative z-10">
+              <div className="max-w-3xl mx-auto text-center">
+                <h1 className="text-5xl font-bold mb-6 transition-all duration-1650 ease-out opacity-0 animate-fade-in">
+                  Smarter Routes. Personalized Stops.
+                </h1>
+                <p className="text-xl mb-8 max-w-2xl transition-all duration-1650 ease-out delay-350 opacity-0 animate-fade-in">
+                  Discover your journey - not just your destination, tailored to your preferences
+                </p>
+                <div className="transition-all duration-1650 ease-out delay-700 opacity-0 animate-fade-in">
+                  <button 
+                    onClick={() => handleViewChange('form')}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Plan Your Trip
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
