@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+googlemaps
+polyline
+faiss-cpu
+sentence-transformers
+llama-index
+pydantic
+transformers>=4.35.0
