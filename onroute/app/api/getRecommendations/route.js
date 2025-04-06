@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, User } from '../lib/mongodb';
+import { connectToDatabase } from '../lib/mongodb';
 import { authenticate } from '../lib/auth';
+import axios from 'axios';
+
+// Create axios instance for Llama API
+const llamaApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_LLAMA_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000 // 10 second timeout for ML model
+});
 
 export async function POST(request) {
   try {
     // Connect to database
     await connectToDatabase();
     
-    // Authenticate user
+    // Authenticate user (but we don't need preferences anymore)
     const authResult = await authenticate(request);
     if (authResult.status !== 200) {
       return NextResponse.json(
@@ -17,7 +27,7 @@ export async function POST(request) {
     }
     
     const data = await request.json();
-    const { start, destination, startCoords, destCoords } = data;
+    const { start, destination, startCoords, destCoords, useCustomPrompt, customPrompt } = data;
     
     // Validate required fields
     if (!start || !destination) {
@@ -34,21 +44,16 @@ export async function POST(request) {
       );
     }
     
-    // Get user preferences from database
-    const user = authResult.user;
-    const userPreferences = user ? user.preferences : {};
-    
+    // Log the authenticated request (removed user preferences)
     console.log('Authenticated recommendation request:', {
-      user: user?.name || 'Unknown',
+      user: authResult.user?.name || 'Unknown',
       start,
       destination,
       startCoords,
-      destCoords
+      destCoords,
+      useCustomPrompt,
+      customPrompt
     });
-
-    // Calculate midpoint between start and destination for stop recommendations
-    const midLat = (startCoords.lat + destCoords.lat) / 2;
-    const midLng = (startCoords.lng + destCoords.lng) / 2;
 
     // Calculate distance between points (haversine formula)
     const distance = calculateDistance(
@@ -56,90 +61,82 @@ export async function POST(request) {
       destCoords.lat, destCoords.lng
     );
     
-    // Only recommend stops if trip is longer than 50 miles
-    const shouldRecommendStops = distance > 50;
-    
-    // Generate recommendations
-    const stops = [
-      { 
-        location: startCoords, 
-        type: 'start', 
-        name: start 
-      }
-    ];
-    
-    // Add personalized midpoint stops if the trip is long enough
-    if (shouldRecommendStops) {
-      // Determine restaurant type based on user preferences
-      let restaurantName = 'Recommended Restaurant';
-      let restaurantType = 'restaurant';
+    try {
+      // Connect to Llama Model API instead of using hardcoded stops
+      console.log('Connecting to Llama Model API...');
       
-      // Personalize based on user preferences
-      if (userPreferences && userPreferences.foodPreferences && userPreferences.foodPreferences.length > 0) {
-        // Use first food preference to customize restaurant name
-        const foodPref = userPreferences.foodPreferences[0];
-        restaurantName = `${foodPref} Restaurant`;
-        restaurantType = foodPref.toLowerCase();
-      } else if (userPreferences && userPreferences.favoriteChains && userPreferences.favoriteChains.length > 0) {
-        // Or use favorite chain
-        restaurantName = userPreferences.favoriteChains[0];
+      // Prepare the request data based on whether there's a custom prompt
+      let llamaEndpoint = '/api/travel-plan';
+      let llamaRequestData = {
+        source: start,
+        destination: destination,
+        start_time: new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
+      };
+      
+      // If using custom prompt, use restaurant search endpoint
+      if (useCustomPrompt && customPrompt && customPrompt.trim()) {
+        llamaEndpoint = '/api/restaurant-search';
+        llamaRequestData = {
+          query: customPrompt,
+          source: start,
+          destination: destination,
+          start_time: new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
+        };
       }
       
-      // Add restaurant stop with slight offset
-      stops.push({
-        location: {
-          lat: midLat + (Math.random() * 0.02 - 0.01),
-          lng: midLng + (Math.random() * 0.02 - 0.01),
-        },
-        type: restaurantType,
-        name: restaurantName,
-        rating: 4.5,
-        priceLevel: 2,
-        description: 'Based on your preferences',
-        address: '123 Main St, Anytown, USA'
-      });
+      console.log(`Calling Llama API endpoint: ${llamaEndpoint} with data:`, llamaRequestData);
+      const llamaResponse = await llamaApi.post(llamaEndpoint, llamaRequestData);
       
-      // Add gas station with slight offset
-      stops.push({
-        location: {
-          lat: midLat + (Math.random() * 0.02 - 0.01),
-          lng: midLng + (Math.random() * 0.02 - 0.01),
+      if (llamaResponse.data && llamaResponse.data.status === 'success') {
+        console.log('Successfully received Llama API response');
+        
+        // Process the Llama API response
+        const llamaData = llamaResponse.data.data;
+        
+        // Transform the Llama API response to the format expected by the frontend
+        const transformedResponse = transformLlamaResponse(llamaData, startCoords, destCoords, start, destination, distance);
+        
+        return NextResponse.json(transformedResponse);
+      } else {
+        throw new Error('Invalid response from Llama API');
+      }
+    } catch (llamaError) {
+      console.error('Error connecting to Llama API:', llamaError);
+      
+      // Fallback to minimal stops if Llama API fails
+      const stops = [
+        { 
+          location: startCoords, 
+          type: 'start', 
+          name: start 
         },
-        type: 'gas',
-        name: 'Recommended Gas Station',
-        rating: 4.0,
-        description: 'Based on trip route',
-        address: '456 Fuel Ave, Anytown, USA'
+        { 
+          location: destCoords, 
+          type: 'destination', 
+          name: destination 
+        }
+      ];
+      
+      const googleMapsLink = `https://www.google.com/maps/dir/${encodeURIComponent(
+        start
+      )}/${encodeURIComponent(destination)}/`;
+
+      // Return minimal recommendations
+      return NextResponse.json({
+        route: {
+          stops,
+          googleMapsLink,
+          distance: {
+            miles: Math.round(distance),
+            kilometers: Math.round(distance * 1.60934)
+          },
+          estimatedTime: {
+            hours: Math.floor(distance / 65), // Assuming 65 mph average speed
+            minutes: Math.round((distance / 65) * 60) % 60
+          }
+        },
       });
     }
-    
-    // Add destination
-    stops.push({ 
-      location: destCoords, 
-      type: 'destination', 
-      name: destination 
-    });
-
-    // Generate Google Maps directions link
-    const googleMapsLink = `https://www.google.com/maps/dir/${encodeURIComponent(
-      start
-    )}/${encodeURIComponent(destination)}/`;
-
-    // Return recommendations
-    return NextResponse.json({
-      route: {
-        stops,
-        googleMapsLink,
-        distance: {
-          miles: Math.round(distance),
-          kilometers: Math.round(distance * 1.60934)
-        },
-        estimatedTime: {
-          hours: Math.floor(distance / 65), // Assuming 65 mph average speed
-          minutes: Math.round((distance / 65) * 60) % 60
-        }
-      },
-    });
   } catch (error) {
     console.error('Server error generating recommendations:', error);
     return NextResponse.json(
@@ -168,4 +165,88 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function toRadians(degrees) {
   return degrees * (Math.PI/180);
+}
+
+// Transform Llama API response to expected frontend format
+function transformLlamaResponse(llamaData, startCoords, destCoords, startName, destName, distance) {
+  // Initialize with start and destination stops
+  const stops = [
+    { 
+      location: startCoords, 
+      type: 'start', 
+      name: startName 
+    }
+  ];
+  
+  // Process Llama API response based on its format
+  if (typeof llamaData === 'string') {
+    // If it's a text response, we can't extract stops directly
+    console.log('Received text response from Llama API');
+  } else if (llamaData.suggested_stops) {
+    // Handle the simple format from travel-plan endpoint
+    for (const stop of llamaData.suggested_stops) {
+      stops.push({
+        location: {
+          lat: stop.coordinates?.latitude || 0,
+          lng: stop.coordinates?.longitude || 0
+        },
+        type: stop.type.toLowerCase(),
+        name: stop.reason,
+        time: stop.time
+      });
+    }
+  } else if (llamaData.stops_with_restaurants || (llamaData.travel_plan && llamaData.travel_plan.stops_with_restaurants)) {
+    const stopsData = llamaData.stops_with_restaurants || (llamaData.travel_plan && llamaData.travel_plan.stops_with_restaurants);
+    
+    for (const stopData of stopsData) {
+      const stopInfo = stopData.stop_info;
+      // Add places as stops
+      if (stopData.places && stopData.places.length > 0) {
+        const topPlace = [...stopData.places].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+        if (topPlace) {
+          stops.push({
+            location: {
+              lat: topPlace.location?.lat || (topPlace.coordinates?.latitude || 0),
+              lng: topPlace.location?.lng || (topPlace.coordinates?.longitude || 0)
+            },
+            type: stopInfo.type.toLowerCase(),
+            name: topPlace.name,
+            address: topPlace.address || topPlace.vicinity,
+            rating: topPlace.rating
+          });
+        }
+      }
+    }
+  }
+  
+  // Always add destination as the last stop
+  stops.push({ 
+    location: destCoords, 
+    type: 'destination', 
+    name: destName 
+  });
+  
+  // Generate Google Maps directions link
+  const googleMapsLink = `https://www.google.com/maps/dir/${encodeURIComponent(
+    startName
+  )}/${encodeURIComponent(destName)}/`;
+  
+  // If we received restaurant suggestions, include them
+  const restaurantSuggestions = llamaData.restaurant_suggestions || null;
+  
+  return {
+    route: {
+      stops,
+      googleMapsLink,
+      distance: {
+        miles: Math.round(distance),
+        kilometers: Math.round(distance * 1.60934)
+      },
+      estimatedTime: {
+        hours: Math.floor(distance / 65), // Assuming 65 mph average speed
+        minutes: Math.round((distance / 65) * 60) % 60
+      },
+      restaurantSuggestions
+    }
+  };
 } 

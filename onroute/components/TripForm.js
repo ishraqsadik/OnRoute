@@ -5,7 +5,9 @@ export default function TripForm({ onSubmit }) {
   const [formData, setFormData] = useState({
     start: '',
     destination: '',
-    fuelStatus: '' // Empty default value for fuel status
+    fuelStatus: '', // Empty default value for fuel status
+    useCustomPrompt: false, // Whether to use custom prompt or auto recommendations
+    customPrompt: '' // Custom prompt for the AI
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,10 +105,10 @@ export default function TripForm({ onSubmit }) {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
     // Clear error if user is fixing the input
     setError(null);
@@ -120,6 +122,11 @@ export default function TripForm({ onSubmit }) {
     
     if (!formData.fuelStatus || isNaN(formData.fuelStatus) || parseInt(formData.fuelStatus) < 0) {
       setError('Please enter a valid fuel status (positive number)');
+      return false;
+    }
+
+    if (formData.useCustomPrompt && !formData.customPrompt.trim()) {
+      setError('Please enter your custom prompt');
       return false;
     }
     
@@ -215,6 +222,38 @@ export default function TripForm({ onSubmit }) {
           className="w-full p-2 border rounded-md" 
         />
         <p className="mt-1 text-sm text-gray-500">Enter the estimated miles left in your gas tank</p>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center mb-2">
+          <input
+            id="useCustomPrompt"
+            name="useCustomPrompt"
+            type="checkbox"
+            checked={formData.useCustomPrompt}
+            onChange={handleChange}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+          />
+          <label htmlFor="useCustomPrompt" className="ml-2 block text-sm font-medium text-gray-700">
+            I want to write my own prompt for recommendations
+          </label>
+        </div>
+        <p className="text-xs text-gray-500 mb-2">
+          {formData.useCustomPrompt 
+            ? "Write your own prompt to get customized AI recommendations" 
+            : "Our AI will recommend the top stops based on your route"}
+        </p>
+        
+        {formData.useCustomPrompt && (
+          <textarea
+            id="customPrompt"
+            name="customPrompt"
+            value={formData.customPrompt}
+            onChange={handleChange}
+            placeholder="Example: Find me authentic Mexican restaurants with vegetarian options"
+            className="w-full p-2 border rounded-md h-24"
+          />
+        )}
       </div>
       
       <button 
