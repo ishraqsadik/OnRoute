@@ -4,9 +4,12 @@ import TripForm from '@/components/TripForm';
 import MapView from '@/components/MapView';
 import LoginForm from '@/components/LoginForm';
 import SignupForm from '@/components/SignupForm';
+import Results from '@/components/Results';
+import UserPreferences from '@/components/UserPreferences';
 import ScriptLoader from '@/components/ScriptLoader';
 import { getRecommendations } from '@/lib/api';
 import { isAuthenticated, logout } from '@/lib/auth';
+import AuthSuccess from '@/components/AuthSuccess';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('landing');
@@ -61,6 +64,19 @@ export default function Home() {
     logout();
     setIsLoggedIn(false);
     resetToHome();
+  };
+
+  // Handle successful authentication
+  const handleAuthSuccess = () => {
+    setIsLoggedIn(true);
+    
+    // Show success message briefly
+    setCurrentView('authSuccess');
+    
+    // Then redirect to form after 1.5 seconds
+    setTimeout(() => {
+      handleViewChange('form');
+    }, 1500);
   };
 
   return (
@@ -120,59 +136,46 @@ export default function Home() {
         )}
 
         {currentView === 'login' && (
-          <div className="py-8 px-4 max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-8">Login</h2>
+          <div className="mt-8 w-full max-w-md">
             <button 
-              onClick={resetToHome}
-              className="mb-4 text-blue-600 hover:underline flex items-center"
+              onClick={resetToHome} 
+              className="text-white hover:text-gray-200 flex items-center mb-4"
             >
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
               ← Back to Home
             </button>
-            <LoginForm onLogin={() => {
-              setIsLoggedIn(true);
-              handleViewChange('form');
-            }} />
+            <LoginForm onLogin={handleAuthSuccess} onSignupClick={() => handleViewChange('signup')} />
           </div>
         )}
 
         {currentView === 'signup' && (
-          <div className="py-8 px-4 max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-8">Sign Up</h2>
+          <div className="mt-8 w-full max-w-md">
             <button 
-              onClick={resetToHome}
-              className="mb-4 text-blue-600 hover:underline flex items-center"
+              onClick={resetToHome} 
+              className="text-white hover:text-gray-200 flex items-center mb-4"
             >
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
               ← Back to Home
             </button>
-            <SignupForm onSignup={() => {
-              setIsLoggedIn(true);
-              handleViewChange('form');
-            }} />
+            <SignupForm onSignup={handleAuthSuccess} onLoginClick={() => handleViewChange('login')} />
           </div>
         )}
 
         {currentView === 'results' && route && (
-          <div className="py-8 px-4 max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-6">Your Recommended Stops</h2>
-            <button 
-              onClick={() => handleViewChange('form')}
-              className="mb-4 text-blue-600 hover:underline flex items-center"
-            >
-              ← Back to Form
-            </button>
-            <div className="mb-6">
-              <p className="font-semibold">Trip Details:</p>
-              <p>From: {tripData?.start}</p>
-              <p>To: {tripData?.destination}</p>
-              <p>Fuel Status: {tripData?.fuelStatus} miles</p>
-            </div>
-            <MapView stops={route.stops} />
-            <button
-              onClick={() => window.open(route.googleMapsLink)}
-              className="mt-6 w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Open in Google Maps
-            </button>
+          <Results 
+            route={route} 
+            tripData={tripData} 
+            onBackToForm={() => handleViewChange('form')} 
+          />
+        )}
+
+        {currentView === 'authSuccess' && (
+          <div className="w-full max-w-md">
+            <AuthSuccess />
           </div>
         )}
       </div>

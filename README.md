@@ -7,7 +7,7 @@ OnRoute is an AI-powered road trip planning application that helps users find th
 This project consists of two main parts:
 
 1. **Frontend**: Next.js application with TailwindCSS for styling
-2. **Backend**: Express.js server with authentication and API endpoints
+2. **Backend**: Express.js server with MongoDB and authentication
 
 ## Setup Instructions
 
@@ -15,6 +15,7 @@ This project consists of two main parts:
 
 - Node.js 18+ and npm
 - Google Maps API key
+- MongoDB (local or MongoDB Atlas)
 
 ### Environment Variables
 
@@ -27,7 +28,7 @@ GOOGLE_API_KEY=your_google_maps_api_key
 API_URL=http://localhost:3001/api
 ```
 
-Note: The key must be named `GOOGLE_API_KEY` (not `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`).
+Note: The key must be named `GOOGLE_API_KEY`.
 
 #### Backend
 
@@ -36,11 +37,33 @@ Create a `.env` file in the `ai-roadtrip-backend` directory with:
 ```
 PORT=3001
 JWT_SECRET=your-jwt-secret-key-should-be-long-and-secure
+MONGODB_URI=your_mongodb_connection_string
 ```
+
+### MongoDB Setup
+
+The application uses MongoDB to store user data, preferences, and trip history. You have two options:
+
+#### Option 1: MongoDB Atlas (Cloud)
+
+1. Sign up for a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
+2. Create a new cluster (free tier is fine)
+3. Set up database access (create a username and password)
+4. Configure network access (allow connections from your IP address)
+5. Get your connection string and add it to the `.env` file
+
+For detailed instructions, see [ai-roadtrip-backend/MONGODB_SETUP.md](ai-roadtrip-backend/MONGODB_SETUP.md)
+
+#### Option 2: Local MongoDB
+
+1. Install MongoDB Community Edition on your machine
+2. Start the MongoDB service
+3. Set up a database and user
+4. Use a connection string like: `mongodb://username:password@localhost:27017/onroute`
 
 ### Installation and Running
 
-#### Option 1: Frontend Only (Recommended for initial development)
+#### Option 1: Frontend Only (Development)
 
 If you're just working on the frontend and don't need the backend yet:
 
@@ -75,11 +98,13 @@ npm run backend
 ```
 
 ## Current Features
-    
+
 - **Authentication**: User signup, login, and profile management
 - **Trip Planning**: Route planning with Google Maps integration
 - **Location Autocomplete**: Suggestions when typing start and destination locations
 - **Interactive Map**: Display routes with markers for recommended stops
+- **Database Storage**: Save user preferences and trip history
+- **User Preferences**: Store food preferences for better recommendations
 
 ## Troubleshooting
 
@@ -96,14 +121,19 @@ If you encounter errors with Google Maps:
 
 3. **API Key Restrictions**: If you set domain restrictions on your API key, make sure `localhost` is included.
 
-### Network Errors
+### MongoDB Connection Issues
 
-If you see "Network Error" messages:
-- This is expected when the backend is not running.
-- The app will still work using fallback mock data.
-- To remove these errors, start the backend server.
+If you see MongoDB connection errors:
+
+1. **Check your connection string** in the `.env` file
+2. **Verify network connectivity** and firewall settings
+3. **Ensure your IP address** is allowed in MongoDB Atlas Network Access settings
+4. **Check database user permissions**
+
+For more detailed MongoDB troubleshooting, see [ai-roadtrip-backend/MONGODB_SETUP.md](ai-roadtrip-backend/MONGODB_SETUP.md)
 
 ## Development Notes
 
-- The backend currently uses in-memory storage for development. For production, uncomment and configure the MongoDB connection.
-- Google Maps integration requires a valid API key with Maps JavaScript API and Places API enabled. 
+- The backend uses MongoDB to store user data, preferences, and trip history
+- The application includes fallback to in-memory storage if MongoDB connection fails
+- Google Maps integration requires a valid API key with Maps JavaScript API and Places API enabled 
