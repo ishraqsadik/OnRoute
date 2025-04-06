@@ -100,12 +100,34 @@ export default function Home() {
 
       <div className={`transition-all duration-500 ease-in-out ${isAnimating ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
         {currentView === 'landing' && (
-          <div className="flex min-h-[50vh] flex-col items-center justify-center text-center p-6 mt-16">
-            <h1 className="text-5xl font-bold mb-6">Smarter Routes. Personalized Stops.</h1>
-            <p className="text-xl mb-8 max-w-2xl">Discover your journey - not just your destination, tailored to your preferences</p>
+          <div className="flex min-h-[50vh] flex-col items-center justify-center text-center p-6 mt-16 relative">
+            <div className="absolute top-[-120px] right-[50px] w-[510px] h-[510px] pointer-events-none">
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/dashedline.png"
+                  alt="Route Path"
+                  fill
+                  className="object-contain opacity-20"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 510px"
+                />
+              </div>
+              <div className="absolute top-[427px] right-[200px]">
+                <Image
+                  src="/images/car.png"
+                  alt="Car"
+                  width={61}
+                  height={45}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
+            <h1 className="text-5xl font-bold mb-6 relative z-10">Smarter Routes. Personalized Stops.</h1>
+            <p className="text-xl mb-8 max-w-2xl relative z-10">Discover your journey - not just your destination, tailored to your preferences</p>
             <button 
               onClick={() => handleViewChange('form')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition-colors relative z-10"
             >
               Plan Your Trip
             </button>
