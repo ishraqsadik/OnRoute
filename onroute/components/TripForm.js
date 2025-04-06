@@ -1,15 +1,15 @@
-'use client';
-import { useState, useEffect, useRef } from 'react';
+"use client";
+import { useState, useEffect, useRef } from "react";
 
 export default function TripForm({ onSubmit }) {
   const [formData, setFormData] = useState({
-    start: '',
-    destination: '',
-    fuelStatus: '', // Empty default value for fuel status
+    start: "",
+    destination: "",
+    fuelStatus: "", // Empty default value for fuel status
     useCustomPrompt: false, // Whether to use custom prompt or auto recommendations
-    customPrompt: '' // Custom prompt for the AI
+    customPrompt: "", // Custom prompt for the AI
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const startInputRef = useRef(null);
@@ -35,21 +35,24 @@ export default function TripForm({ onSubmit }) {
     const initializeAutocomplete = () => {
       try {
         console.log("Initializing autocomplete...");
-        
+
         // Initialize autocomplete for start location
-        const startAuto = new window.google.maps.places.Autocomplete(startInputRef.current, {
-          types: ['geocode']
-        });
-        
-        startAuto.addListener('place_changed', () => {
+        const startAuto = new window.google.maps.places.Autocomplete(
+          startInputRef.current,
+          {
+            types: ["geocode"],
+          }
+        );
+
+        startAuto.addListener("place_changed", () => {
           try {
             const place = startAuto.getPlace();
             console.log("Start place selected:", place);
-            
+
             if (place && place.formatted_address) {
-              setFormData(prev => ({
+              setFormData((prev) => ({
                 ...prev,
-                start: place.formatted_address
+                start: place.formatted_address,
               }));
             }
           } catch (err) {
@@ -59,19 +62,22 @@ export default function TripForm({ onSubmit }) {
         setStartAutocomplete(startAuto);
 
         // Initialize autocomplete for destination
-        const destAuto = new window.google.maps.places.Autocomplete(destInputRef.current, {
-          types: ['geocode']
-        });
-        
-        destAuto.addListener('place_changed', () => {
+        const destAuto = new window.google.maps.places.Autocomplete(
+          destInputRef.current,
+          {
+            types: ["geocode"],
+          }
+        );
+
+        destAuto.addListener("place_changed", () => {
           try {
             const place = destAuto.getPlace();
             console.log("Destination place selected:", place);
-            
+
             if (place && place.formatted_address) {
-              setFormData(prev => ({
+              setFormData((prev) => ({
                 ...prev,
-                destination: place.formatted_address
+                destination: place.formatted_address,
               }));
             }
           } catch (err) {
@@ -79,12 +85,14 @@ export default function TripForm({ onSubmit }) {
           }
         });
         setDestAutocomplete(destAuto);
-        
+
         console.log("Autocomplete initialization complete");
         setAutocompleteError(null);
       } catch (error) {
-        console.error('Error initializing autocomplete:', error);
-        setAutocompleteError('Failed to initialize location autocomplete: ' + error.message);
+        console.error("Error initializing autocomplete:", error);
+        setAutocompleteError(
+          "Failed to initialize location autocomplete: " + error.message
+        );
       }
     };
 
@@ -106,9 +114,9 @@ export default function TripForm({ onSubmit }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
     // Clear error if user is fixing the input
     setError(null);
@@ -116,44 +124,50 @@ export default function TripForm({ onSubmit }) {
 
   const validateForm = () => {
     if (!formData.start || !formData.destination) {
-      setError('Please enter both start location and destination');
+      setError("Please enter both start location and destination");
       return false;
     }
-    
-    if (!formData.fuelStatus || isNaN(formData.fuelStatus) || parseInt(formData.fuelStatus) < 0) {
-      setError('Please enter a valid fuel status (positive number)');
+
+    if (
+      !formData.fuelStatus ||
+      isNaN(formData.fuelStatus) ||
+      parseInt(formData.fuelStatus) < 0
+    ) {
+      setError("Please enter a valid fuel status (positive number)");
       return false;
     }
 
     if (formData.useCustomPrompt && !formData.customPrompt.trim()) {
-      setError('Please enter your custom prompt');
+      setError("Please enter your custom prompt");
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       if (onSubmit) {
         await onSubmit(formData);
       } else {
         // Fallback for backward compatibility
-        localStorage.setItem('tripData', JSON.stringify(formData));
-        window.location.href = '/trip/results';
+        localStorage.setItem("tripData", JSON.stringify(formData));
+        window.location.href = "/trip/results";
       }
     } catch (error) {
-      console.error('Error submitting trip data:', error);
-      setError(error.message || 'Failed to process your request. Please try again.');
+      console.error("Error submitting trip data:", error);
+      setError(
+        error.message || "Failed to process your request. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -167,61 +181,72 @@ export default function TripForm({ onSubmit }) {
           <p className="text-xs mt-1">Check browser console for more details</p>
         </div>
       )}
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-md">
           <p className="text-sm">{error}</p>
         </div>
       )}
-      
+
       <div className="mb-4">
-        <label htmlFor="start" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="start"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Start Location
         </label>
-        <input 
+        <input
           id="start"
           name="start"
           ref={startInputRef}
           value={formData.start}
           onChange={handleChange}
-          placeholder="Enter starting point" 
-          required 
-          className="w-full p-2 border rounded-md" 
+          placeholder="Enter starting point"
+          required
+          className="w-full p-2 border rounded-md"
         />
       </div>
-      
+
       <div className="mb-4">
-        <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="destination"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Destination
         </label>
-        <input 
+        <input
           id="destination"
           name="destination"
           ref={destInputRef}
           value={formData.destination}
           onChange={handleChange}
-          placeholder="Enter destination" 
-          required 
-          className="w-full p-2 border rounded-md" 
+          placeholder="Enter destination"
+          required
+          className="w-full p-2 border rounded-md"
         />
       </div>
-      
+
       <div className="mb-4">
-        <label htmlFor="fuelStatus" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="fuelStatus"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Fuel Status (miles left)
         </label>
-        <input 
+        <input
           id="fuelStatus"
           name="fuelStatus"
           type="number"
           min="0"
           value={formData.fuelStatus}
           onChange={handleChange}
-          placeholder="Enter remaining fuel range in miles" 
+          placeholder="Enter remaining fuel range in miles"
           required
-          className="w-full p-2 border rounded-md" 
+          className="w-full p-2 border rounded-md"
         />
-        <p className="mt-1 text-sm text-gray-500">Enter the estimated miles left in your gas tank</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Enter the estimated miles left in your gas tank
+        </p>
       </div>
 
       <div className="mb-4">
@@ -234,16 +259,19 @@ export default function TripForm({ onSubmit }) {
             onChange={handleChange}
             className="h-4 w-4 text-blue-600 border-gray-300 rounded"
           />
-          <label htmlFor="useCustomPrompt" className="ml-2 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="useCustomPrompt"
+            className="ml-2 block text-sm font-medium text-gray-700"
+          >
             I want to write my own prompt for recommendations
           </label>
         </div>
         <p className="text-xs text-gray-500 mb-2">
-          {formData.useCustomPrompt 
-            ? "Write your own prompt to get customized AI recommendations" 
+          {formData.useCustomPrompt
+            ? "Write your own prompt to get customized AI recommendations"
             : "Our AI will recommend the top stops based on your route"}
         </p>
-        
+
         {formData.useCustomPrompt && (
           <textarea
             id="customPrompt"
@@ -255,17 +283,17 @@ export default function TripForm({ onSubmit }) {
           />
         )}
       </div>
-      
-      <button 
-        type="submit" 
+
+      <button
+        type="submit"
         disabled={isSubmitting}
         className={`w-full py-2 rounded-md transition-colors ${
-          isSubmitting 
-            ? 'bg-gray-400 text-gray-100 cursor-not-allowed' 
-            : 'bg-blue-500 text-white hover:bg-blue-600'
+          isSubmitting
+            ? "bg-gray-400 text-gray-100 cursor-not-allowed"
+            : "bg-blue-500 text-white hover:bg-blue-600"
         }`}
       >
-        {isSubmitting ? 'Processing...' : 'Get Recommendations'}
+        {isSubmitting ? "Processing..." : "Get Recommendations"}
       </button>
     </form>
   );
