@@ -110,25 +110,6 @@ curl -X POST http://localhost:8000/api/travel-plan \
   -d '{"source":"Tampa, FL", "destination":"Miami, FL", "start_time":"1:00 PM"}'
 ```
 
-## Troubleshooting
-
-### Common Issues and Solutions:
-
-1. **Hardcoded Stops Appearing**: Make sure `NEXT_PUBLIC_USE_LLAMA_MODEL=true` is in your .env.local file
-   
-2. **No API Connection**: 
-   - Visit http://localhost:3000/debug to check API status
-   - Verify the Llama API is running on port 8000
-   - Check for CORS errors in browser console
-   
-3. **Google Maps Not Loading**:
-   - Ensure your Google Maps API key is valid
-   - Enable Geocoding, Places, and Directions APIs in your Google Cloud account
-   
-4. **No Restaurant Recommendations**:
-   - Check your prompt wording (be specific about cuisines or preferences)
-   - Verify the Llama API is connecting to Google's services properly
-
 ## Implementation Details
 
 - The frontend uses Next.js with React and Tailwind CSS
